@@ -25,13 +25,17 @@ import configparser
 import pscoverdl
 import requests
 
-VERSION = "1.0"
+VERSION = 1.0
 
 
 class pscoverdl_gui(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.check_updates(VERSION)
+        icon_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "app/icon.ico"
+        )
+        self.iconbitmap(icon_path)
         self.geometry("450x350")
         self.resizable(False, False)
         self.font = ("MS Sans Serif", 12, "bold")
@@ -273,9 +277,9 @@ class pscoverdl_gui(ctk.CTk):
     def pcsx2_button_event(self):
         self.select_frame_by_name("pcsx2_frame")
 
-    def select_directory(self, module: str, is_cache: bool):
-        # module - pcsx2, duckstation
-        if module == "pcsx2":
+    def select_directory(self, emulator: str, is_cache: bool):
+        # emulator - pcsx2, duckstation
+        if emulator == "pcsx2":
             if is_cache:
                 filetypes = (("gamelist", "*.cache"),)
                 file_path = filedialog.askopenfilename(filetypes=filetypes)
@@ -285,7 +289,7 @@ class pscoverdl_gui(ctk.CTk):
                 file_path = filedialog.askdirectory()
                 self.pcsx2_covers_directory_textbox.delete(0, "end")
                 self.pcsx2_covers_directory_textbox.insert(0, file_path)
-        elif module == "duckstation":
+        elif emulator == "duckstation":
             if is_cache:
                 filetypes = (("gamelist", "*.cache"),)
                 file_path = filedialog.askopenfilename(filetypes=filetypes)
@@ -351,13 +355,22 @@ class pscoverdl_gui(ctk.CTk):
     def start_download(self, emulator: str):
         self.start_download_button.configure(state="disabled")
 
-        pscoverdl.download_covers(
-            self.duckstation_covers_directory_textbox.get(),
-            self.duckstation_gamecache_textbox.get(),
-            self.duckstation_cover_type_var.get(),
-            self.duckstation_use_ssl_checkbox.get(),
-            emulator,
-        )
+        if emulator == "pcsx2":
+            pscoverdl.download_covers(
+                self.pcsx2_covers_directory_textbox.get(),
+                self.pcsx2_gamecache_textbox.get(),
+                self.pcsx2_cover_type_var.get(),
+                self.pcsx2_use_ssl_checkbox.get(),
+                emulator,
+            )
+        elif emulator == "duckstation":
+            pscoverdl.download_covers(
+                self.duckstation_covers_directory_textbox.get(),
+                self.duckstation_gamecache_textbox.get(),
+                self.duckstation_cover_type_var.get(),
+                self.duckstation_use_ssl_checkbox.get(),
+                emulator,
+            )
 
         self.save_configurations()
         self.start_download_button.configure(state="normal")
@@ -365,11 +378,11 @@ class pscoverdl_gui(ctk.CTk):
     def check_updates(self, version: str):
         try:
             rep_version = requests.get(
-                "https://github.com/xlenore/pscoverdl/raw/main/version"
+                "https://github.com/xlenore/pscoverdl/raw/main/VERSION"
             ).text.strip()
 
             try:
-                rep_version = int(rep_version)
+                rep_version = float(rep_version)
             except ValueError:
                 rep_version = version
 

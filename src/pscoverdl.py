@@ -40,7 +40,11 @@ class BaseCoverDownloader:
             regex = re.findall(r"(\w{4}-\d{5})", file.read())
             serial_list = list(set(regex))
             print(colored(f"[LOG]: {len(serial_list)} games found", "green"))
-            print(colored(f"[LOG]: Removing already downloaded covers...", "green"))
+            print(
+                colored(
+                    f"[LOG]: Removing already downloaded covers from queue...", "green"
+                )
+            )
             serial_list = [
                 game_serial
                 for game_serial in serial_list
@@ -94,8 +98,6 @@ class BaseCoverDownloader:
         covers_url = covers_url_default
         if self.cover_type == 1:
             covers_url = covers_url_3d
-
-        print(covers_url)
 
         if self.cover_type == 0:
             cover_urls = [
