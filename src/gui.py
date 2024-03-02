@@ -20,7 +20,7 @@ import customtkinter as ctk
 from tkinter import filedialog
 import tkinter as tk
 import os
-from PIL import Image
+from PIL import Image, ImageTk
 import configparser
 import pscoverdl
 import requests
@@ -35,7 +35,8 @@ class pscoverdl_gui(ctk.CTk):
         icon_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "app/icon.ico"
         )
-        self.iconbitmap(icon_path)
+        icon_photo = ImageTk.PhotoImage(Image.open(icon_path))
+        self.wm_iconphoto(True, icon_photo)
         self.geometry("450x350")
         self.resizable(False, False)
         self.font = ("MS Sans Serif", 12, "bold")
@@ -45,10 +46,10 @@ class pscoverdl_gui(ctk.CTk):
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
 
         self.ps1_image = ctk.CTkImage(
-            Image.open(image_path + "/PS1.png"), size=(20, 20)
+            Image.open(image_path + "/ps1.png"), size=(20, 20)
         )
         self.ps2_image = ctk.CTkImage(
-            Image.open(image_path + "/PS2.png"), size=(20, 20)
+            Image.open(image_path + "/ps2.png"), size=(20, 20)
         )
 
         # region nav frame
