@@ -1,0 +1,13 @@
+certifi==2024.2.2
+charset-normalizer==3.3.2
+customtkinter==5.2.2
+darkdetect==0.8.0
+idna==3.6
+packaging==23.2
+pillow==10.2.0
+PyYAML==6.0.1
+requests==2.31.0
+termcolor==2.4.0
+tk==0.1.0
+tqdm==4.66.2
+urllib3==2.2.1
