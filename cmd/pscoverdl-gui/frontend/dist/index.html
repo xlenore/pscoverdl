@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PSCoverDL</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="nav" aria-label="Emulator selection">
+      <button id="duckstation-tab" class="nav-button" type="button" data-emulator="duckstation">
+        <img src="./assets/ps1.png" alt="" />
+        <span>DuckStation</span>
+      </button>
+      <button id="pcsx2-tab" class="nav-button" type="button" data-emulator="pcsx2">
+        <img src="./assets/ps2.png" alt="" />
+        <span>PCSX2</span>
+      </button>
+    </aside>
+
+    <main class="workspace">
+      <header class="panel-header">
+        <div>
+          <h1 id="panel-title">DuckStation</h1>
+        </div>
+      </header>
+
+      <form id="cover-form" class="cover-form">
+        <section class="form-page" data-page="duckstation" aria-label="DuckStation cover settings">
+          <div class="settings-grid">
+            <article class="field-card">
+              <label class="field-label" for="duckstation-cover-directory">Covers</label>
+              <div class="picker-row">
+                <input id="duckstation-cover-directory" class="text-input" placeholder="Covers folder" autocomplete="off" />
+                <button class="secondary-button" type="button" data-browse="cover" data-emulator="duckstation">Choose folder</button>
+              </div>
+            </article>
+
+            <article class="field-card">
+              <label class="field-label" for="duckstation-game-cache">gamelist.cache file</label>
+              <div class="picker-row">
+                <input id="duckstation-game-cache" class="text-input" placeholder="Path to gamelist.cache" autocomplete="off" />
+                <button class="secondary-button" type="button" data-browse="cache" data-emulator="duckstation">Choose file</button>
+              </div>
+            </article>
+
+            <fieldset class="option-card radio-group">
+              <legend>Cover type</legend>
+              <label><input type="radio" name="duckstation-cover-type" value="0" checked /> Default</label>
+              <label><input type="radio" name="duckstation-cover-type" value="1" /> 3D</label>
+            </fieldset>
+
+            <div class="option-card toggles">
+              <label class="check-row"><input id="duckstation-use-ssl" type="checkbox" checked /> Use SSL</label>
+              <label class="check-row"><input id="duckstation-fallback" type="checkbox" /> Try the other cover type if missing</label>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="primary-button" type="submit" data-start="duckstation">Download covers</button>
+            <button class="secondary-button detect-button" type="button" data-detect="duckstation">Detect paths</button>
+            <span>Workers: 4</span>
+          </div>
+        </section>
+
+        <section class="form-page" data-page="pcsx2" aria-label="PCSX2 cover settings" hidden>
+          <div class="settings-grid">
+            <article class="field-card">
+              <label class="field-label" for="pcsx2-cover-directory">Covers</label>
+              <div class="picker-row">
+                <input id="pcsx2-cover-directory" class="text-input" placeholder="Covers folder" autocomplete="off" />
+                <button class="secondary-button" type="button" data-browse="cover" data-emulator="pcsx2">Choose folder</button>
+              </div>
+            </article>
+
+            <article class="field-card">
+              <label class="field-label" for="pcsx2-game-cache">gamelist.cache file</label>
+              <div class="picker-row">
+                <input id="pcsx2-game-cache" class="text-input" placeholder="Path to gamelist.cache" autocomplete="off" />
+                <button class="secondary-button" type="button" data-browse="cache" data-emulator="pcsx2">Choose file</button>
+              </div>
+            </article>
+
+            <fieldset class="option-card radio-group">
+              <legend>Cover type</legend>
+              <label><input type="radio" name="pcsx2-cover-type" value="0" checked /> Default</label>
+              <label><input type="radio" name="pcsx2-cover-type" value="1" /> 3D</label>
+            </fieldset>
+
+            <div class="option-card toggles">
+              <label class="check-row"><input id="pcsx2-use-ssl" type="checkbox" checked /> Use SSL</label>
+              <label class="check-row"><input id="pcsx2-fallback" type="checkbox" /> Try the other cover type if missing</label>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="primary-button" type="submit" data-start="pcsx2">Download covers</button>
+            <button class="secondary-button detect-button" type="button" data-detect="pcsx2">Detect paths</button>
+            <span>Workers: 4</span>
+          </div>
+        </section>
+      </form>
+
+      <section class="console-card" aria-label="Command output">
+        <div class="console-title">Output</div>
+        <pre id="output" aria-live="polite"></pre>
+      </section>
+    </main>
+  </div>
+  <script src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+:root {
+  color-scheme: dark;
+  --bg: #202020;
+  --nav: #292929;
+  --panel: #242424;
+  --card: #2d2d2d;
+  --line: #414141;
+  --text: #f2f2f2;
+  --muted: #b8b8b8;
+  --quiet: #8f8f8f;
+  --blue: #3b73b9;
+  --blue-hover: #4584d2;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { width: 100%; height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 13px; }
+button, input { font: inherit; }
+#app { display: grid; grid-template-columns: 150px minmax(0, 1fr); min-width: 620px; min-height: 430px; }
+
+.nav {
+  background: var(--nav);
+  border-right: 1px solid #1b1b1b;
+  padding: 14px 10px;
+}
+.nav-button {
+  width: 100%;
+  height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+.nav-button:hover { background: #363636; color: var(--text); }
+.nav-button.active { background: #3a3a3a; color: var(--text); }
+.nav-button img { width: 18px; height: 18px; object-fit: contain; }
+
+.workspace {
+  min-width: 0;
+  overflow: auto;
+  padding: 16px 18px;
+  background: var(--panel);
+}
+.panel-header {
+  display: block;
+  margin: 0 0 12px;
+}
+h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.cover-form { margin: 0; }
+.form-page[hidden] { display: none; }
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.field-card,
+.option-card,
+.console-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+}
+.field-card { padding: 9px 10px; }
+.field-label {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.picker-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  gap: 8px;
+}
+.text-input {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid #515151;
+  border-radius: 7px;
+  background: #202020;
+  color: var(--text);
+  padding: 0 10px;
+  outline: 0;
+  font-size: 13px;
+}
+.text-input:focus { border-color: var(--blue); }
+.text-input::placeholder { color: var(--quiet); opacity: 1; }
+.secondary-button,
+.primary-button {
+  border: 0;
+  border-radius: 7px;
+  min-height: 32px;
+  padding: 0 10px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.secondary-button { width: 116px; }
+.detect-button { width: 104px; background: #3a3a3a; }
+.secondary-button:hover,
+.primary-button:hover { background: var(--blue-hover); }
+.secondary-button:disabled,
+.primary-button:disabled { opacity: 0.55; cursor: wait; }
+.option-card { padding: 9px 10px; margin: 0; }
+.radio-group {
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.radio-group legend {
+  float: left;
+  margin: 0 16px 0 0;
+  padding: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.radio-group label,
+.check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+input[type="radio"],
+input[type="checkbox"] { accent-color: #5ab0f2; }
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 0;
+  color: var(--quiet);
+  font-size: 12px;
+}
+.primary-button { min-width: 136px; }
+.console-card { margin-top: 10px; padding: 9px 10px; }
+.console-title {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+#output {
+  min-height: 58px;
+  max-height: 96px;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--muted);
+  background: #1d1d1d;
+  border: 1px solid #383838;
+  border-radius: 7px;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+#output:empty::before { content: "Command output will appear here."; color: var(--quiet); }
+@media (max-width: 680px) {
+  #app { grid-template-columns: 142px minmax(0, 1fr); min-width: 560px; }
+  .workspace { padding: 14px; }
+  .picker-row { grid-template-columns: 1fr; }
+  .toggles, .radio-group { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
+}

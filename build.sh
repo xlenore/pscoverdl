@@ -1,80 +1,81 @@
 #!/usr/bin/env bash
-# ---------------------------------------------------------------------------
-# build.sh — PSCoverDL build script for macOS and Linux
-#
-# Produces a self-contained app in dist/pscoverdl/
-#
-# Usage:
-#   chmod +x build.sh
-#   ./build.sh
-# ---------------------------------------------------------------------------
-
 set -euo pipefail
 
-# Resolve the directory this script lives in (repo root)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC_DIR="$SCRIPT_DIR/src"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIST_DIR="$ROOT_DIR/dist"
+APP="pscoverdl"
+CLI_MAIN="./cmd/pscoverdl"
+GUI_MAIN="./cmd/pscoverdl-gui"
+HOST_OS="$(go env GOHOSTOS)"
 
-echo "[build] Detecting platform..."
-PLATFORM="$(uname -s)"
-case "$PLATFORM" in
-    Darwin) echo "[build] macOS detected" ;;
-    Linux)  echo "[build] Linux detected" ;;
-    *)      echo "[build] Unsupported platform: $PLATFORM"; exit 1 ;;
+rm -rf "$DIST_DIR"
+mkdir -p "$DIST_DIR"
+export GOCACHE="${GOCACHE:-$ROOT_DIR/.cache/go-build}"
+export GOMODCACHE="${GOMODCACHE:-$ROOT_DIR/.cache/go-mod}"
+mkdir -p "$GOCACHE" "$GOMODCACHE"
+
+build_cli() {
+    local goos="$1"
+    local goarch="$2"
+    local label="$3"
+    local ext=""
+    if [[ "$goos" == "windows" ]]; then
+        ext=".exe"
+    fi
+
+    local out_dir="$DIST_DIR/$APP-$label"
+    mkdir -p "$out_dir"
+    echo "[build:cli] $label"
+    (
+        cd "$ROOT_DIR"
+        CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "-s -w" -o "$out_dir/$APP$ext" "$CLI_MAIN"
+    )
+}
+
+build_gui() {
+    local goos="$1"
+    local goarch="$2"
+    local label="$3"
+    local ext=""
+    if [[ "$goos" == "windows" ]]; then
+        ext=".exe"
+    fi
+
+    local out_dir="$DIST_DIR/$APP-$label"
+    mkdir -p "$out_dir"
+    echo "[build:gui] $label"
+    (
+        cd "$ROOT_DIR"
+        CGO_ENABLED=1 GOOS="$goos" GOARCH="$goarch" go build -tags production -trimpath -ldflags "-s -w" -o "$out_dir/$APP-gui$ext" "$GUI_MAIN"
+    )
+}
+
+build_cli darwin arm64 macos-arm64
+build_cli darwin amd64 macos-x86_64
+build_cli linux amd64 linux-x86_64
+build_cli linux arm64 linux-aarch64
+build_cli windows amd64 windows-x86_64
+build_cli windows arm64 windows-aarch64
+
+case "$HOST_OS" in
+    darwin)
+        build_gui darwin arm64 macos-arm64
+        build_gui darwin amd64 macos-x86_64
+        echo "[build:gui] skipped linux/windows Wails GUI: native CGO/WebView toolchains required"
+        ;;
+    linux)
+        build_gui linux amd64 linux-x86_64
+        build_gui linux arm64 linux-aarch64
+        echo "[build:gui] skipped macos/windows Wails GUI: native CGO/WebView toolchains required"
+        ;;
+    windows)
+        build_gui windows amd64 windows-x86_64
+        build_gui windows arm64 windows-aarch64
+        echo "[build:gui] skipped macos/linux Wails GUI: native CGO/WebView toolchains required"
+        ;;
+    *)
+        echo "[build:gui] skipped: unsupported host $HOST_OS"
+        ;;
 esac
 
-# ---------------------------------------------------------------------------
-# Locate the customtkinter package directory so PyInstaller can bundle it.
-# PyInstaller does not auto-include customtkinter's data files (.json, .otf).
-# ---------------------------------------------------------------------------
-CTK_PATH="$(python3 -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")"
-echo "[build] customtkinter found at: $CTK_PATH"
-
-# ---------------------------------------------------------------------------
-# macOS only: generate .icns icon from icon.png for proper Finder/Dock icon
-# ---------------------------------------------------------------------------
-if [ "$PLATFORM" = "Darwin" ]; then
-    echo "[build] Generating .icns icon..."
-    mkdir -p "$SRC_DIR/app/icon.iconset"
-    python3 - <<EOF
-from PIL import Image
-src = "$SRC_DIR/app/icon.png"
-sizes = [16, 32, 64, 128, 256, 512]
-for s in sizes:
-    img = Image.open(src).resize((s, s), Image.LANCZOS)
-    img.save(f"$SRC_DIR/app/icon.iconset/icon_{s}x{s}.png")
-    img2 = Image.open(src).resize((s*2, s*2), Image.LANCZOS)
-    img2.save(f"$SRC_DIR/app/icon.iconset/icon_{s}x{s}@2x.png")
-EOF
-    iconutil -c icns "$SRC_DIR/app/icon.iconset" -o "$SRC_DIR/app/icon.icns"
-    echo "[build] .icns generated at $SRC_DIR/app/icon.icns"
-    ICON_ARG="--icon=$SRC_DIR/app/icon.icns"
-    BUNDLE_ARG="--osx-bundle-identifier=com.pscoverdl.app"
-else
-    ICON_ARG=""
-    BUNDLE_ARG=""
-fi
-
-# ---------------------------------------------------------------------------
-# Run PyInstaller via python3 -m to avoid PATH issues
-# ---------------------------------------------------------------------------
-python3 -m PyInstaller \
-    --noconfirm \
-    --onedir \
-    --windowed \
-    "--name=pscoverdl" \
-    ${ICON_ARG:+"$ICON_ARG"} \
-    ${BUNDLE_ARG:+"$BUNDLE_ARG"} \
-    "--add-data=$CTK_PATH:customtkinter" \
-    "--add-data=$SRC_DIR/resources:resources" \
-    "--add-data=$SRC_DIR/icons:icons" \
-    "--add-data=$SRC_DIR/app:app" \
-    "$SRC_DIR/gui.py"
-
-echo ""
-echo "[build] Done. Output is in: $SCRIPT_DIR/dist/pscoverdl/"
-
-if [ "$PLATFORM" = "Darwin" ]; then
-    echo "[build] macOS .app bundle: $SCRIPT_DIR/dist/pscoverdl.app"
-fi
-
+echo "[build] binaries written to $DIST_DIR"

@@ -1,0 +1,234 @@
+# yaml-language-server: $schema=https://json.schemastore.org/golangci-lint
+
+# golangci-lint v2 baseline for idiomatic, Google-style Go.
+# Intent: strict enough to catch bugs, security issues, and real style drift early;
+# not so strict that it blocks ordinary, readable Go.
+#
+# Replace github.com/xlenore/pscoverdl with your module path.
+
+version: "2"
+
+issues:
+  # Keep enough repeated issues visible to make bulk fixes easy.
+  max-same-issues: 50
+
+formatters:
+  enable:
+    # Google/Go baseline: mechanical formatting by gofmt, imports by goimports.
+    # Avoid golines: Go has no hard line-length limit; wrap manually when clearer.
+    # Avoid gci/gofumpt here to reduce formatter disagreement and non-standard churn.
+    - gofmt
+    - goimports
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/xlenore/pscoverdl
+
+linters:
+  # Be explicit. Do not inherit newly added linters on golangci-lint upgrades.
+  default: none
+
+  enable:
+    # Correctness / likely bugs.
+    - asasalint
+    - bodyclose
+    - copyloopvar
+    - durationcheck
+    - errcheck
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - gocheckcompilerdirectives
+    - gochecksumtype
+    - gocritic
+    - govet
+    - ineffassign
+    - makezero
+    - mirror
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - recvcheck
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+
+    # Security / unsafe edge cases.
+    - asciicheck
+    - bidichk
+    - gosec
+    - noctx
+    - nosprintfhostport
+
+    # Go/API/style checks that usually improve readability without over-prescribing design.
+    - canonicalheader
+    - depguard
+    - embeddedstructfieldcheck
+    - errname
+    - exptostd
+    - godoclint
+    - gomoddirectives
+    - goprintffuncname
+    - iface
+    - iotamixing
+    - loggercheck
+    - musttag
+    - nakedret
+    - nolintlint
+    - predeclared
+    - protogetter
+    - reassign
+    - revive
+    - sloglint
+    - testableexamples
+    - testifylint
+    - unqueryvet
+    - usetesting
+    - whitespace
+
+    # Optional ecosystem checks. Enable only when those packages are normal in the repo.
+    # - promlinter
+    # - spancheck
+
+    # Intentional omissions from the original golden config:
+    # - golines, gci, gofumpt: gofmt/goimports are the Go/Google baseline.
+    # - cyclop, gocyclo, gocognit, funlen, nestif: useful for reports, noisy as hard CI gates.
+    # - dupl, goconst, mnd, perfsprint, prealloc: often cause churn or premature abstraction.
+    # - funcorder, testpackage, paralleltest, tparallel: prescriptive; not a Google-style requirement.
+    # - gochecknoglobals, gochecknoinits, nonamedreturns: too broad; real problems are caught elsewhere.
+    # - intrange, modernize, usestdlibvars: good cleanup candidates, but noisy across Go version bumps.
+    # - clickhouselint: too project-specific for a general baseline.
+    # - forbidigo: useful only with a project-specific forbidden-symbol policy.
+
+  settings:
+    depguard:
+      rules:
+        deprecated:
+          files:
+            - "$all"
+          deny:
+            - pkg: github.com/golang/protobuf
+              desc: Use google.golang.org/protobuf instead.
+            - pkg: github.com/satori/go.uuid
+              desc: Use github.com/google/uuid instead; satori/go.uuid is not maintained.
+            - pkg: github.com/gofrs/uuid$
+              desc: Use github.com/gofrs/uuid/v5 or later.
+
+    embeddedstructfieldcheck:
+      forbid-mutex: true
+
+    errcheck:
+      check-type-assertions: true
+
+    exhaustive:
+      check:
+        - switch
+        - map
+
+    gochecksumtype:
+      # A default case should not hide a non-exhaustive sum-type switch.
+      default-signifies-exhaustive: false
+
+    gocritic:
+      settings:
+        captLocal:
+          # Catch exported-looking locals, not only parameters.
+          paramsOnly: false
+        underef:
+          # Prefer clearer direct calls when unnecessary dereference is present.
+          skipRecvDeref: false
+
+    godoclint:
+      enable:
+        - no-unused-link
+        - require-stdlib-doclink
+
+    govet:
+      enable-all: true
+      disable:
+        # Often optimizes memory layout at the cost of clarity or API churn.
+        - fieldalignment
+      settings:
+        shadow:
+          strict: true
+
+    nakedret:
+      # Allow tiny helper functions, but reject naked returns once there is real body length.
+      max-func-lines: 5
+
+    nolintlint:
+      # Allow noise-oriented style suppressions without a long explanation.
+      allow-no-explanation:
+        - exhaustive
+      require-explanation: true
+      require-specific: true
+
+    reassign:
+      # Permit globals, but flag reassignment of common sentinel/config vars.
+      # If the repo is service code and can tolerate stricter checks, change this to [".*"].
+      patterns:
+        - "EOF"
+        - "Err.*"
+        - "Default.*"
+
+    rowserrcheck:
+      packages:
+        - github.com/jmoiron/sqlx
+
+    sloglint:
+      # Prefer injected loggers over global/default loggers.
+      no-global: all
+      # Require context-aware slog calls where the logger is already in scope.
+      context: scope
+
+    staticcheck:
+      checks:
+        - all
+        # Package comments are valuable, but too noisy for every internal/cmd package as a hard gate.
+        - -ST1000
+        # Explicit selectors through embedded fields can be clearer in some code.
+        - -QF1008
+
+    unparam:
+      # Avoid false positives for public APIs and editor/subdirectory runs.
+      check-exported: false
+
+    unqueryvet:
+      # Keep default SELECT-* checks; add higher-risk checks that are worth catching early.
+      check-n1: true
+      check-sql-injection: true
+      check-tx-leaks: true
+
+    usetesting:
+      os-temp-dir: true
+
+  exclusions:
+    warn-unused: true
+    presets:
+      - std-error-handling
+      - common-false-positives
+
+    rules:
+      # Tests intentionally use shortcuts that are poor production defaults.
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+
+      # Generated code should be generated again, not hand-fixed.
+      - path: '(^|/)zz_generated\..*\.go$'
+        linters:
+          - revive
+          - staticcheck
+          - gocritic
+          - godoclint
+
+      # Keep exported declaration docs strict, but do not require package comments everywhere.
+      - text: "should have a package comment"
+        linters:
+          - revive

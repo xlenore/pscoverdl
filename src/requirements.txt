@@ -1,6 +1,0 @@
-customtkinter==5.2.0
-Pillow==10.1.0
-PyYAML==6.0.1
-Requests==2.31.0
-termcolor==2.3.0
-tqdm==4.64.1

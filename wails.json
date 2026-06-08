@@ -1,0 +1,14 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "pscoverdl",
+  "outputfilename": "pscoverdl-gui",
+  "frontend:dir": "cmd/pscoverdl-gui/frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "xlenore",
+    "email": ""
+  }
+}

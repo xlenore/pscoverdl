@@ -15,28 +15,118 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: macos-arm64
+            os: macos-15
+            goos: darwin
+            goarch: arm64
+            archive: zip
+            gui_tags: production
+          - target: macos-x86_64
+            os: macos-15-intel
+            goos: darwin
+            goarch: amd64
+            archive: zip
+            gui_tags: production
+          - target: linux-x86_64
+            os: ubuntu-24.04
+            goos: linux
+            goarch: amd64
+            archive: tar
+            gui_tags: production webkit2_41
+          - target: linux-aarch64
+            os: ubuntu-24.04-arm
+            goos: linux
+            goarch: arm64
+            archive: tar
+            gui_tags: production webkit2_41
+          - target: windows-x86_64
+            os: windows-2025
+            goos: windows
+            goarch: amd64
+            archive: zip
+            ext: .exe
+            gui_tags: production
+          - target: windows-aarch64
+            os: windows-11-arm
+            goos: windows
+            goarch: arm64
+            archive: zip
+            ext: .exe
+            gui_tags: production
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
         with:
-          python-version: "3.11"
-          cache: "pip"
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
 
-      - name: Install dependencies
+      - name: Install Linux Wails dependencies
+        if: runner.os == 'Linux'
         run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install -r requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
 
-      - name: Build executable
-        working-directory: src
+      - name: Build binaries
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          EXT: ${{ matrix.ext }}
+          GUI_TAGS: ${{ matrix.gui_tags }}
+          TARGET: ${{ matrix.target }}
         run: |
-          pyinstaller "gui.py" --onefile --clean --name pscoverdl --distpath "dist" --icon="app/icon.ico" --add-data="resources;resources" --add-data="icons;icons" --add-data="app;app"
+          set -euo pipefail
+          out="dist/pscoverdl-${TARGET}"
+          mkdir -p "$out"
+          CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "$out/pscoverdl${EXT:-}" ./cmd/pscoverdl
+          CGO_ENABLED=1 go build -tags "$GUI_TAGS" -trimpath -ldflags "-s -w" -o "$out/pscoverdl-gui${EXT:-}" ./cmd/pscoverdl-gui
+
+      - name: Package artifact
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          if [ "$ARCHIVE" = "zip" ]; then
+            (cd dist && zip -r "../artifacts/pscoverdl-${TARGET}.zip" "pscoverdl-${TARGET}")
+          else
+            (cd dist && tar -czf "../artifacts/pscoverdl-${TARGET}.tar.gz" "pscoverdl-${TARGET}")
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: pscoverdl-${{ matrix.target }}
+          path: artifacts/*
+          if-no-files-found: error
+          archive: false
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - name: Determine version tag
         id: version
@@ -49,9 +139,9 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
+          name: PSCoverDL ${{ steps.version.outputs.tag }}
           generate_release_notes: true
-          files: src/dist/pscoverdl.exe
+          files: artifacts/*
